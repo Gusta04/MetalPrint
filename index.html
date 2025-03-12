@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Gerador de PDF com Código de Barras</title>
+        <link rel="stylesheet" href="styles.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.0/JsBarcode.all.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    </head>
+    <body>
+        <div class="container">
+            <h2>Gerador de Código de Barras</h2>
+            <label for="selectOption">Escolha uma opção:</label>
+            <select id="selectOption">
+                <option value="022.0132 - PERFIL ALUM LGT INTERNO">022.0132 - PERFIL ALUM LGT INTERNO</option>
+                <option value="022.0131 - PERFIL ALUM LGT EXTERNO">022.0131 - PERFIL ALUM LGT EXTERNO</option>
+                <option value="022.0134 - PERFIL ALUM HD INTERNO">022.0134 - PERFIL ALUM HD INTERNO</option>
+                <option value="022.0133 - PERFIL ALUM HD EXTERNO">022.0133 - PERFIL ALUM HD EXTERNO</option>
+                <option value="022.0135 - PERFIL ALUM GUIA INFERIOR">022.0135 - PERFIL ALUM GUIA INFERIOR</option>
+            </select>
+            <br>
+            <input type="text" id="textInput" placeholder="Digite o código">
+            <button onclick="gerarPDF()">Gerar PDF</button>
+            <br>
+        </div>
+        <script>
+            const imagens = {
+                "022.0132 - PERFIL ALUM LGT INTERNO": "assets/internoLGT.png",  // Ajuste os nomes conforme necessário
+                "022.0131 - PERFIL ALUM LGT EXTERNO": "assets/externoLGT.png",
+                "022.0134 - PERFIL ALUM HD INTERNO": "assets/internoHD.png",
+                "022.0133 - PERFIL ALUM HD EXTERNO":"assets/externoHD.png",
+                "022.0135 - PERFIL ALUM GUIA INFERIOR":"assets/inferior.png"
+            };
+    
+            let imagemBase64 = "";
+
+            function atualizarImagem(callback) {
+                const opcaoSelecionada = document.getElementById("selectOption").value;
+                const img = new Image();
+                img.src = imagens[opcaoSelecionada] || "";
+                img.onload = function() {
+                    const canvas = document.createElement("canvas");
+                    const ctx = canvas.getContext("2d");
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    imagemBase64 = canvas.toDataURL("image/png");
+                    if (callback) callback();
+                };
+            }
+        
+            function gerarPDF() {
+                const { jsPDF } = window.jspdf;
+                const texto = document.getElementById("textInput").value;
+                const selectText = document.getElementById("selectOption").value.toUpperCase();
+                
+                if (!texto) {
+                    alert("Digite um código para gerar o código de barras.");
+                    return;
+                }
+                
+                const canvas = document.createElement("canvas");
+                JsBarcode(canvas, texto, { format: "CODE128" });
+                
+                atualizarImagem(() => {
+                    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: [100, 100] });
+                    
+                    function desenharEtiqueta(yPos) {
+                        pdf.setFontSize(10);
+                        pdf.text(selectText, 40, yPos + 10, { align: "center" });
+                        if (imagemBase64) {
+                            pdf.addImage(imagemBase64, "PNG", 80, yPos, 15, 15);
+                        }
+                        pdf.addImage(canvas.toDataURL("image/png"), "PNG", 25, yPos + 15, 50, 20);
+                        pdf.setFontSize(12);
+                        pdf.text(texto, 50, yPos + 40, { align: "center" });
+                    }
+                    
+                    desenharEtiqueta(0);
+                    pdf.setLineDash([2, 2], 0);
+                    pdf.line(5, 50, 95, 50);
+                    desenharEtiqueta(55);
+                    
+                    pdf.save("etiqueta.pdf");
+                });
+            }
+        </script>
+    </body>
+</html>
