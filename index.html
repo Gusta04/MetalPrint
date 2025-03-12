@@ -76,11 +76,21 @@
                         pdf.setFontSize(12);
                         pdf.text(texto, 50, yPos + 40, { align: "center" });
                     }
+                    function desenharEtiqueta2(yPos) {
+                        pdf.setFontSize(10);
+                        pdf.text(selectText, 40, yPos + 10, { align: "center" });
+                        if (imagemBase64) {
+                            pdf.addImage(imagemBase64, "PNG", 80, yPos, 15, 15);
+                        }
+                        
+                        pdf.setFontSize(28);
+                        pdf.text(texto, 50, yPos + 30, { align: "center" });
+                    }
                     
                     desenharEtiqueta(0);
                     pdf.setLineDash([2, 2], 0);
                     pdf.line(5, 50, 95, 50);
-                    desenharEtiqueta(55);
+                    desenharEtiqueta2(55);
                     
                     pdf.save("etiqueta.pdf");
                 });
